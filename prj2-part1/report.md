@@ -210,20 +210,17 @@ void scheduler(void)
 ```
 #### 阻塞与释放
 ```
-void do_block()
+void do_block(queue_t *queue)
 {
-    // block the current_running task into the queue
     current_running->status = TASK_BLOCKED;
-    // push to blockqueue
-    queue_push(&block_queue, current_running);
+    queue_push(queue, current_running);
     do_scheduler();
 }
 
-void do_unblock_one()
+void do_unblock_one(queue_t *queue)
 {
     // unblock the head task from the queue
-    pcb_t *unblock_one;
-    unblock_one = queue_dequeue(&block_queue);
+    pcb_t *unblock_one = (pcb_t *)queue_dequeue(queue);
     unblock_one->status = TASK_READY;
     queue_push(&ready_queue, unblock_one);
 }
@@ -251,8 +248,8 @@ static void init_pcb()
     pcb[0].kernel_context.cp0_badvaddr = 0;
     pcb[0].kernel_context.cp0_cause = 0;
     pcb[0].kernel_context.cp0_epc = 0;
-	for(j = 0; j < num_sched1_tasks; j++){
 
+	for(j = 0; j <= 2; j++){
 		pcb[j + 1].pid = 2 + j;
 		pcb[j + 1].status = TASK_READY;
 		pcb[j + 1].cursor_x = 0;
@@ -270,17 +267,17 @@ static void init_pcb()
    		pcb[j + 1].kernel_context.cp0_epc = 0;
 		queue_push(&ready_queue, &pcb[j + 1]);
 	}
-	for(j = num_sched1_tasks; j < num_lock_tasks + num_sched1_tasks; j++){
 
-		pcb[j + 1].pid = 2 + j;
+	for(j = 0; j <= 1; j++){
+		pcb[j + 1].pid = 5 + j;
 		pcb[j + 1].status = TASK_READY;
 		pcb[j + 1].cursor_x = 0;
 		pcb[j + 1].cursor_y = 0;
 		for(i = 1; i <= 31; i++){
 			pcb[j + 1].kernel_context.regs[i] = 0;
 		}
-		pcb[j + 1].kernel_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
-		pcb[j + 1].kernel_context.regs[31] = lock_tasks[j - num_sched1_tasks]->entry_point;
+		pcb[j + 1].kernel_context.regs[29] = 0xa0f00000 - (j + 3) * 0x1000; //sp
+		pcb[j + 1].kernel_context.regs[31] = lock_tasks[j]->entry_point;
 		pcb[j + 1].kernel_context.cp0_status = 0;
     	pcb[j + 1].kernel_context.hi = 0;
     	pcb[j + 1].kernel_context.lo = 0;
@@ -296,35 +293,27 @@ static void init_pcb()
 ```
 void do_mutex_lock_init(mutex_lock_t *lock)
 {
-    // if the current lock already be locked
-    if(lock->status == LOCKED) {
-        // set it to block and wait
-        do_block(&block_queue[lock->id]);
-    }
-
-    lock->status = LOCKED;
+    lock->status = UNLOCKED;
 }
 ```
 #### 锁的获取
 ```
 void do_mutex_lock_acquire(mutex_lock_t *lock)
 {
-    if(lock->status == LOCKED)
-    {
-        do_block(&block_queue[lock->id]);
+    if(lock->status == LOCKED) {
+        do_block(&block_queue);
+    } else {
+        lock->status = LOCKED;
     }
-    lock->status = LOCKED;
 }
 ```
 #### 解锁
 ```
 void do_mutex_lock_release(mutex_lock_t *lock)
 {
-    if(!queue_is_empty(&block_queue[lock->id])) {
-        do_unblock_one(&block_queue[lock->id]);
-        lock->status = LOCKED;
-    }
-    else
+    if(!queue_is_empty(&block_queue)) {
+        do_unblock_one(&block_queue);
         lock->status = UNLOCKED;
+    }
 }
 ```
