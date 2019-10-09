@@ -25,29 +25,36 @@ END(asm_start)
 
 
 LEAF(OPEN_INTER)
-    li      k0, 0x00100000
+    li      k0, 0x01000000
     mtc0    zero, CP0_COUNT
     mtc0    k0, CP0_COMPARE
     nop
     mfc0    k0, CP0_STATUS
     nop
-    ori     k0, k0, 0x8001
+    li      k1, 0x8001
+    or      k0, k0, k1
     mtc0    k0, CP0_STATUS
     nop
+    mfc0    k1, CP0_STATUS
+    nop
     jr      ra
+    nop
 END(OPEN_INTER)
 
 LEAF(CLOSE_INTER)
     mfc0    k0, CP0_STATUS
-    andi    k0, k0, 0x2
-    mtc0    k0, CP0_STATUS
-    nop
+	nop#避免CP0冒险，协处理器操作比较慢
+	li      k1, 0xfffffffe
+	and     k0, k0, k1
+	mtc0    k0, CP0_STATUS
+	nop
 
     jr      ra
+    nop
 END(CLOSE_INTER)
 
 LEAF(RESET_COUNPARE)
-    li      k0, 0x00100000
+    li      k0, 0x01000000
     mtc0    zero, CP0_COUNT
     mtc0    k0, CP0_COMPARE
     jr      ra
@@ -177,23 +184,26 @@ END(RESET_COUNPARE)
 
 .endm
 
+.set    noat
 .global exception_handler_begin
 .global exception_handler_end
 
 NESTED(exception_handler_entry, 0, sp)   
 exception_handler_begin:
+    mfc0    k0, CP0_EPC
+    nop
     mfc0    k0, CP0_STATUS
     nop
-    and     k0, 0x2
+    li      k1, 0xfffffffe
+    and     k0, k0, k1
     mtc0    k0, CP0_STATUS
     nop
-    mfc0    k1, CP0_EPC
-    nop
-    nop
 
-
+testsave:
     SAVE_CONTEXT(KERNEL)
     #exccode
+    li      sp, 0xa0f05000
+
     mfc0    k0, CP0_CAUSE
     nop
     andi    k0, 0x7c
@@ -202,7 +212,7 @@ exception_handler_begin:
     lw      k0, 0(k0)
     jr      k0
     nop
-    andi    k0, 0x7c
+    nop
     //TODO close interrupt
     // jmp exception_handler[i] which decided by CP0_CAUSE
     // Leve2 exception Handler.
@@ -210,8 +220,37 @@ exception_handler_end:
 END(exception_handler_entry)
 
 NESTED(handle_int, 0, sp)
-    j		interrupt_helper				# jump to interrupt_helper
+    mfc0    a0, CP0_STATUS
+    mfc0    a1, CP0_CAUSE
+    nop
+    addi	sp, sp, -8			# sp = sp + -8
     
+    jal		interrupt_helper				# jump to interrupt_helper
+    addi    sp, sp, 8
+    nop
+    RESTORE_CONTEXT(KERNEL)
+testrestore:
+    li      k0, 0x01000000
+    mtc0    zero, CP0_COUNT
+    nop
+    mtc0    k0, CP0_COMPARE
+    nop
+    mfc0    k1, CP0_STATUS
+    nop
+    li      k0, 0x1
+    or      k1, k1, k0
+    mtc0    k1, CP0_STATUS
+    nop
+    mfc0    k1, CP0_EPC
+eretepc:
+    nop
+    mfc0    k1, CP0_COUNT
+    nop
+    mfc0    k1, CP0_COMPARE
+    nop
+    eret
+    nop
+
     // interrupt handler
     // Leve3 exception Handler.
 END(handle_int)
@@ -223,33 +262,7 @@ NESTED(handle_syscall, 0, sp)
 END(handle_syscall)
 
 NESTED(handle_other, 0, sp)
-    j		0x0				# jump to 0x0
+    j		handle_int				# jump to handle_int
     
     // other exception handler
 END(handle_other)
-
-LEAF(BACK_TO_NORMAL)
-    RESTORE_CONTEXT(KERNEL)
-test:
-    li      k0, 0x00100000
-    mtc0    zero, CP0_COUNT
-    mtc0    k0, CP0_COMPARE
-    nop
-    mfc0    k0, CP0_EPC
-    mfc0    k1, CP0_STATUS
-    nop
-    li      k1, 0x8001
-    mtc0    k1, CP0_STATUS
-    nop
-    jr      k0
-    nop
-    nop
-END(BACK_TO_NORMAL) 
-
-
-LEAF(seecounpare)
-    mfc0    k0, CP0_COUNT
-    mfc0    k1, CP0_COMPARE
-    nop
-    jr      ra
-END(seecounpare)

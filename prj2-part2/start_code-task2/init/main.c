@@ -54,7 +54,7 @@ static void init_pcb()
 		pcb[0].kernel_context.regs[i] = 0;
 	}
 	pcb[0].kernel_context.regs[29] = 0xa0f01000;
-	pcb[0].kernel_context.cp0_status = 0;
+	pcb[0].kernel_context.cp0_status = 0x8002;
     pcb[0].kernel_context.hi = 0;
     pcb[0].kernel_context.lo = 0;
     pcb[0].kernel_context.cp0_badvaddr = 0;
@@ -70,14 +70,14 @@ static void init_pcb()
 			pcb[j + 1].user_context.regs[i] = 0;
 		}
 		pcb[j + 1].kernel_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
-		pcb[j + 1].kernel_context.cp0_status = 0;
+		pcb[j + 1].kernel_context.cp0_status = 0x8002;
     	pcb[j + 1].kernel_context.hi = 0;
     	pcb[j + 1].kernel_context.lo = 0;
     	pcb[j + 1].kernel_context.cp0_badvaddr = 0;
     	pcb[j + 1].kernel_context.cp0_cause = 0;
    		pcb[j + 1].kernel_context.cp0_epc = sched1_tasks[j]->entry_point;
 		queue_push(&ready_queue, &pcb[j + 1]);
-	}/*
+	}
 	for(j = num_sched1_tasks; j < num_lock_tasks + num_sched1_tasks; j++){
 
 		pcb[j + 1].pid = 2 + j;
@@ -88,15 +88,14 @@ static void init_pcb()
 			pcb[j + 1].kernel_context.regs[i] = 0;
 		}
 		pcb[j + 1].kernel_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
-		pcb[j + 1].kernel_context.regs[31] = lock_tasks[j - num_sched1_tasks]->entry_point;
-		pcb[j + 1].kernel_context.cp0_status = 0;
+		pcb[j + 1].kernel_context.cp0_status = 0x8002;
     	pcb[j + 1].kernel_context.hi = 0;
     	pcb[j + 1].kernel_context.lo = 0;
     	pcb[j + 1].kernel_context.cp0_badvaddr = 0;
     	pcb[j + 1].kernel_context.cp0_cause = 0;
-   		pcb[j + 1].kernel_context.cp0_epc = 0;
+   		pcb[j + 1].kernel_context.cp0_epc = lock_tasks[j - num_sched1_tasks]->entry_point;
 		queue_push(&ready_queue, &pcb[j + 1]);
-	}*/
+	}
 }
 
 static void init_exception_handler()
@@ -119,7 +118,6 @@ static void init_exception()
 	memcpy((void *)0x80000180, begin, (end-begin));
 
 	init_exception_handler();
-	RESET_COUNPARE();
 	// 1. Get CP0_STATUS
 	// 2. Disable all interrupt
 	// 3. Copy the level 2 exception handling code to 0x80000180
@@ -160,7 +158,6 @@ void __attribute__((section(".entry_function"))) _start(void)
 	OPEN_INTER();
 	while (1)
 	{
-		seecounpare();
 		// (QAQQQQQQQQQQQ)
 		// If you do non-preemptive scheduling, you need to use it to surrender control
 		

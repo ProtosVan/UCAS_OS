@@ -21,6 +21,8 @@ static void check_sleeping()
 
 void scheduler(void)
 {
+    current_running->cursor_x = screen_cursor_x;
+    current_running->cursor_y = screen_cursor_y;
     if(current_running->status == TASK_RUNNING || current_running->status == TASK_READY) {
         current_running->status = TASK_READY;
         queue_push(&ready_queue, current_running);
@@ -29,6 +31,8 @@ void scheduler(void)
     }
     current_running = queue_dequeue(&ready_queue);
     current_running->status = TASK_RUNNING;
+    screen_cursor_x = current_running->cursor_x;
+    screen_cursor_y = current_running->cursor_y;
 }
 
 void do_sleep(uint32_t sleep_time)
