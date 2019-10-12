@@ -43,7 +43,7 @@ END(OPEN_INTER)
 
 LEAF(CLOSE_INTER)
     mfc0    k0, CP0_STATUS
-	nop#避免CP0冒险，协处理器操作比较慢
+	nop
 	li      k1, 0xfffffffe
 	and     k0, k0, k1
 	mtc0    k0, CP0_STATUS
@@ -200,9 +200,7 @@ exception_handler_begin:
     nop
 
 testsave:
-    SAVE_CONTEXT(KERNEL)
-    #exccode
-    li      sp, 0xa0f05000
+    SAVE_CONTEXT(USER)
 
     mfc0    k0, CP0_CAUSE
     nop
@@ -228,8 +226,7 @@ NESTED(handle_int, 0, sp)
     jal		interrupt_helper				# jump to interrupt_helper
     addi    sp, sp, 8
     nop
-    RESTORE_CONTEXT(KERNEL)
-testrestore:
+    RESTORE_CONTEXT(USER)
     li      k0, 0x01000000
     mtc0    zero, CP0_COUNT
     nop
@@ -241,13 +238,6 @@ testrestore:
     or      k1, k1, k0
     mtc0    k1, CP0_STATUS
     nop
-    mfc0    k1, CP0_EPC
-eretepc:
-    nop
-    mfc0    k1, CP0_COUNT
-    nop
-    mfc0    k1, CP0_COMPARE
-    nop
     eret
     nop
 
@@ -256,13 +246,25 @@ eretepc:
 END(handle_int)
 
 NESTED(handle_syscall, 0, sp)
-    j		0x0				# jump to 0x0
-    
+    addi    sp, sp, -16
+    jal		system_call_helper
+    addi    sp, sp, 16
+
+    RESTORE_CONTEXT(USER)
+    li      k0, 0x01000000
+    mtc0    k0, CP0_COMPARE
+    mtc0    zero, CP0_COUNT
+    nop
+    mfc0    k0, CP0_STATUS
+    li      k1, 0x00000001
+	or      k0, k0, k1
+	mtc0    k0, CP0_STATUS
+	eret
     // system call handler
 END(handle_syscall)
 
 NESTED(handle_other, 0, sp)
-    j		handle_int				# jump to handle_int
+    j		0x0				# jump to 0x0
     
     // other exception handler
 END(handle_other)

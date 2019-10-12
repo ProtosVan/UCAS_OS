@@ -51,7 +51,7 @@ static void init_pcb()
 	pcb[0].cursor_x = 0;
 	pcb[0].cursor_y = 0;
 	for(i = 1; i <= 31; i++){
-		pcb[0].kernel_context.regs[i] = 0;
+		pcb[0].user_context.regs[i] = 0;
 	}
 	pcb[0].kernel_context.regs[29] = 0xa0f01000;
 	pcb[0].kernel_context.cp0_status = 0x8002;
@@ -69,15 +69,15 @@ static void init_pcb()
 		for(i = 1; i <= 31; i++){
 			pcb[j + 1].user_context.regs[i] = 0;
 		}
-		pcb[j + 1].kernel_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
-		pcb[j + 1].kernel_context.cp0_status = 0x8002;
-    	pcb[j + 1].kernel_context.hi = 0;
-    	pcb[j + 1].kernel_context.lo = 0;
-    	pcb[j + 1].kernel_context.cp0_badvaddr = 0;
-    	pcb[j + 1].kernel_context.cp0_cause = 0;
-   		pcb[j + 1].kernel_context.cp0_epc = sched1_tasks[j]->entry_point;
+		pcb[j + 1].user_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
+		pcb[j + 1].user_context.cp0_status = 0x8002;
+    	pcb[j + 1].user_context.hi = 0;
+    	pcb[j + 1].user_context.lo = 0;
+    	pcb[j + 1].user_context.cp0_badvaddr = 0;
+    	pcb[j + 1].user_context.cp0_cause = 0;
+   		pcb[j + 1].user_context.cp0_epc = sched1_tasks[j]->entry_point;
 		queue_push(&ready_queue, &pcb[j + 1]);
-	}
+	}/*
 	for(j = num_sched1_tasks; j < num_lock_tasks + num_sched1_tasks; j++){
 
 		pcb[j + 1].pid = 2 + j;
@@ -85,17 +85,17 @@ static void init_pcb()
 		pcb[j + 1].cursor_x = 0;
 		pcb[j + 1].cursor_y = 0;
 		for(i = 1; i <= 31; i++){
-			pcb[j + 1].kernel_context.regs[i] = 0;
+			pcb[j + 1].user_context.regs[i] = 0;
 		}
-		pcb[j + 1].kernel_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
-		pcb[j + 1].kernel_context.cp0_status = 0x8002;
-    	pcb[j + 1].kernel_context.hi = 0;
-    	pcb[j + 1].kernel_context.lo = 0;
-    	pcb[j + 1].kernel_context.cp0_badvaddr = 0;
-    	pcb[j + 1].kernel_context.cp0_cause = 0;
-   		pcb[j + 1].kernel_context.cp0_epc = lock_tasks[j - num_sched1_tasks]->entry_point;
+		pcb[j + 1].user_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
+		pcb[j + 1].user_context.cp0_status = 0x8002;
+    	pcb[j + 1].user_context.hi = 0;
+    	pcb[j + 1].user_context.lo = 0;
+    	pcb[j + 1].user_context.cp0_badvaddr = 0;
+    	pcb[j + 1].user_context.cp0_cause = 0;
+   		pcb[j + 1].user_context.cp0_epc = lock_tasks[j - num_sched1_tasks]->entry_point;
 		queue_push(&ready_queue, &pcb[j + 1]);
-	}
+	}*/
 }
 
 static void init_exception_handler()
@@ -127,6 +127,25 @@ static void init_exception()
 static void init_syscall(void)
 {
 	// init system call table.
+	int i = 0;
+	for(i = 0; i < NUM_SYSCALLS; i++){
+		syscall[i] = 0;
+	}
+	syscall[SYSCALL_SLEEP] = (int (*)())&(do_sleep);
+	
+	syscall[SYSCALL_BLOCK] = (void (*))&(do_block);
+	syscall[SYSCALL_UNBLOCK_ONE] = (void (*))&(do_unblock_one);
+	syscall[SYSCALL_UNBLOCK_ALL] =(int (*)())&(do_unblock_all);
+	
+	syscall[SYSCALL_WRITE] = (int (*)())&(screen_write);
+
+
+	syscall[SYSCALL_CURSOR] = (int (*)())&(screen_move_cursor);
+	syscall[SYSCALL_REFLUSH] = (int (*)())&(screen_reflush);
+	
+	syscall[SYSCALL_MUTEX_LOCK_INIT] = (int (*)())&(do_mutex_lock_init);
+	syscall[SYSCALL_MUTEX_LOCK_ACQUIRE] = (int (*)())&(do_mutex_lock_acquire);
+	syscall[SYSCALL_MUTEX_LOCK_RELEASE] = (int (*)())&(do_mutex_lock_release);
 }
 
 // jump from bootloader.

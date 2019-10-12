@@ -6,7 +6,14 @@
 
 void system_call_helper(int fn, int arg1, int arg2, int arg3)
 {
-    // syscall[fn](arg1, arg2, arg3)
+    if(fn >= 0 & fn < NUM_SYSCALLS){
+		current_running->user_context.cp0_epc = current_running->user_context.cp0_epc + 4;
+		syscall[fn](arg1, arg2, arg3);
+	}else{
+		printk("System call error: No such function.");
+	}
+    return;
+	// syscall[fn](arg1, arg2, arg3)
 }
 
 void sys_sleep(uint32_t time)
