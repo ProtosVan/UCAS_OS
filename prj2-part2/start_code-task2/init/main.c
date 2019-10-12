@@ -173,8 +173,6 @@ void __attribute__((section(".entry_function"))) _start(void)
 	// init screen (QAQ)
 	init_screen();
 	printk("> [INIT] SCREEN initialization succeeded.\n");
-
-	RESET_COUNPARE();
 	// TODO Enable interrupt
 	OPEN_INTER();
 	while (1)

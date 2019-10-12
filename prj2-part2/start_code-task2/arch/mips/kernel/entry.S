@@ -25,7 +25,7 @@ END(asm_start)
 
 
 LEAF(OPEN_INTER)
-    li      k0, 0x01000000
+    li      k0, 0x00150000
     mtc0    zero, CP0_COUNT
     mtc0    k0, CP0_COMPARE
     nop
@@ -52,14 +52,6 @@ LEAF(CLOSE_INTER)
     jr      ra
     nop
 END(CLOSE_INTER)
-
-LEAF(RESET_COUNPARE)
-    li      k0, 0x01000000
-    mtc0    zero, CP0_COUNT
-    mtc0    k0, CP0_COMPARE
-    jr      ra
-    nop
-END(RESET_COUNPARE)
 
 .macro SAVE_CONTEXT offset
     #   $k0(26)     current_running
@@ -230,7 +222,7 @@ NESTED(handle_int, 0, sp)
     addi    sp, sp, 8
     nop
     RESTORE_CONTEXT(USER)
-    li      k0, 0x01000000
+    li      k0, 0x00150000
     mtc0    zero, CP0_COUNT
     nop
     mtc0    k0, CP0_COMPARE
@@ -260,10 +252,22 @@ NESTED(handle_syscall, 0, sp)
     addi    sp, sp, 16
 
     RESTORE_CONTEXT(USER)
-    li      k0, 0x01000000
+    li      k0, 0x00150000
     mtc0    k0, CP0_COMPARE
     #mtc0    zero, CP0_COUNT
     nop
+
+    mfc0    k0, CP0_COUNT
+    nop
+    li      k1, 0x0014ff00
+    slt     k1, k0, k1
+
+    bnez    k1, OKTOGO
+    li      k0, 0x0014ff00
+    mtc0    k0, CP0_COUNT
+    nop
+
+OKTOGO:
     mfc0    k0, CP0_STATUS
     li      k1, 0x00000001
 	or      k0, k0, k1
@@ -278,3 +282,17 @@ NESTED(handle_other, 0, sp)
     
     // other exception handler
 END(handle_other)
+
+
+
+NESTED(SEECOUNTPARE, 0, sp)
+    mfc0    k0, CP0_COUNT
+    nop
+    mfc0    k1, CP0_COMPARE
+seemetest:
+    nop
+
+    jr      ra
+    
+    // other exception handler
+END(SEECOUNTPARE)
