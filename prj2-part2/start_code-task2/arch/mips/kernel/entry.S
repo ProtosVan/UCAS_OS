@@ -200,7 +200,9 @@ exception_handler_begin:
     nop
 
 testsave:
+
     SAVE_CONTEXT(USER)
+    li      sp, 0xa0f05000
 
     mfc0    k0, CP0_CAUSE
     nop

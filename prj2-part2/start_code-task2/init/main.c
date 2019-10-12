@@ -51,7 +51,7 @@ static void init_pcb()
 	pcb[0].cursor_x = 0;
 	pcb[0].cursor_y = 0;
 	for(i = 1; i <= 31; i++){
-		pcb[0].user_context.regs[i] = 0;
+		pcb[0].kernel_context.regs[i] = 0;
 	}
 	pcb[0].kernel_context.regs[29] = 0xa0f01000;
 	pcb[0].kernel_context.cp0_status = 0x8002;
