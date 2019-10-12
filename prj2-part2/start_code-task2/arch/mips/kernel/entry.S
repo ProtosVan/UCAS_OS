@@ -64,6 +64,7 @@ END(RESET_COUNPARE)
 .macro SAVE_CONTEXT offset
     #   $k0(26)     current_running
     lw		k0, current_running    # Current running is a global pointer.
+    addi    k0, k0, \offset
     sw		$1, OFFSET_REG1(k0)
     sw		$2, OFFSET_REG2(k0)
     sw		$3, OFFSET_REG3(k0)
@@ -125,7 +126,7 @@ END(RESET_COUNPARE)
 .macro RESTORE_CONTEXT offset
         #   $k0(26)     current_running
     lw		k0, current_running    # Current running is a global pointer.
-
+    addi    k0, k0, \offset
     lw		$1, OFFSET_REG1(k0)
     lw		$2, OFFSET_REG2(k0)
     lw		$3, OFFSET_REG3(k0)
@@ -249,24 +250,31 @@ END(handle_int)
 
 NESTED(handle_syscall, 0, sp)
     addi    sp, sp, -16
+    move	a3, a2
+	move	a2, a1
+	move	a1, a0
+	move	a0, v0
     jal		system_call_helper
+    nop
+
     addi    sp, sp, 16
 
     RESTORE_CONTEXT(USER)
     li      k0, 0x01000000
     mtc0    k0, CP0_COMPARE
-    mtc0    zero, CP0_COUNT
+    #mtc0    zero, CP0_COUNT
     nop
     mfc0    k0, CP0_STATUS
     li      k1, 0x00000001
 	or      k0, k0, k1
 	mtc0    k0, CP0_STATUS
+    nop
 	eret
     // system call handler
 END(handle_syscall)
 
 NESTED(handle_other, 0, sp)
-    j		0x0				# jump to 0x0
+    j		handle_int				# jump to 0x0
     
     // other exception handler
 END(handle_other)

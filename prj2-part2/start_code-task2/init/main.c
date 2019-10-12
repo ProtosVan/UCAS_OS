@@ -75,7 +75,9 @@ static void init_pcb()
     	pcb[j + 1].user_context.lo = 0;
     	pcb[j + 1].user_context.cp0_badvaddr = 0;
     	pcb[j + 1].user_context.cp0_cause = 0;
-   		pcb[j + 1].user_context.cp0_epc = sched1_tasks[j]->entry_point;
+   		pcb[j + 1].user_context.cp0_epc = sched2_tasks[j]->entry_point;
+		pcb[j + 1].cursor_x = 0;
+		pcb[j + 1].cursor_y = 0;
 		queue_push(&ready_queue, &pcb[j + 1]);
 	}/*
 	for(j = num_sched1_tasks; j < num_lock_tasks + num_sched1_tasks; j++){
