@@ -39,6 +39,6 @@ void do_mutex_lock_release(mutex_lock_t *lock)
 {
     if(!queue_is_empty(&block_queue))
         do_unblock_one(&block_queue);
-    if(queue_is_empty(&block_queue))
+    else
         lock->status = UNLOCKED;
 }

@@ -79,7 +79,6 @@ void do_unblock_one()
     unblock_one = queue_dequeue(&block_queue);
     unblock_one->status = TASK_READY;
     queue_push(&ready_queue, unblock_one);
-    scheduler();
 }
 
 void do_unblock_all(queue_t *queue)
