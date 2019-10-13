@@ -3,6 +3,8 @@
 .equ    KERNEL, 0
 .equ    USER,   156
 
+.equ    INT_TIME, 150000
+
 .macro STI
 .endm
 
@@ -25,7 +27,7 @@ END(asm_start)
 
 
 LEAF(OPEN_INTER)
-    li      k0, 0x00150000
+    li      k0, INT_TIME
     mtc0    zero, CP0_COUNT
     mtc0    k0, CP0_COMPARE
     nop
@@ -222,7 +224,7 @@ NESTED(handle_int, 0, sp)
     addi    sp, sp, 8
     nop
     RESTORE_CONTEXT(USER)
-    li      k0, 0x00150000
+    li      k0, INT_TIME
     mtc0    zero, CP0_COUNT
     nop
     mtc0    k0, CP0_COMPARE
@@ -252,19 +254,18 @@ NESTED(handle_syscall, 0, sp)
     addi    sp, sp, 16
 
     RESTORE_CONTEXT(USER)
-    li      k0, 0x00150000
+    li      k0, INT_TIME
     mtc0    k0, CP0_COMPARE
-    #mtc0    zero, CP0_COUNT
     nop
 
     mfc0    k0, CP0_COUNT
     nop
-    li      k1, 0x0014ff00
-    slt     k1, k0, k1
+    li      k1, INT_TIME
+    addi    k1, k1, -100
+    slt     k0, k0, k1
 
-    bnez    k1, OKTOGO
-    li      k0, 0x0014ff00
-    mtc0    k0, CP0_COUNT
+    bnez    k0, OKTOGO
+    mtc0    k1, CP0_COUNT
     nop
 
 OKTOGO:

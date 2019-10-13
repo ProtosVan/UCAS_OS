@@ -38,10 +38,16 @@ queue_t ready_queue;
 /* block queue to wait */
 queue_t block_queue;
 
+// sleep queue
+queue_t sleep_queue;
+
 int exception_handler[32];
 
 static void init_pcb()
 {
+	queue_init(&ready_queue);
+	queue_init(&block_queue);
+	queue_init(&sleep_queue);
 	int i;
 	int j;
 	current_running = &pcb[0];
@@ -60,44 +66,27 @@ static void init_pcb()
     pcb[0].kernel_context.cp0_badvaddr = 0;
     pcb[0].kernel_context.cp0_cause = 0;
     pcb[0].kernel_context.cp0_epc = 0xa0800200;
-	for(j = 0; j < num_sched1_tasks; j++){
+	for(j = 1; j <= num_final_test; j++){
 
-		pcb[j + 1].pid = 2 + j;
-		pcb[j + 1].status = TASK_READY;
-		pcb[j + 1].cursor_x = 0;
-		pcb[j + 1].cursor_y = 0;
+		pcb[j].pid = j + 1;
+		pcb[j].status = TASK_READY;
+		pcb[j].cursor_x = 0;
+		pcb[j].cursor_y = 0;
 		for(i = 1; i <= 31; i++){
-			pcb[j + 1].user_context.regs[i] = 0;
+			pcb[j].user_context.regs[i] = 0;
 		}
-		pcb[j + 1].user_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
-		pcb[j + 1].user_context.cp0_status = 0x8002;
-    	pcb[j + 1].user_context.hi = 0;
-    	pcb[j + 1].user_context.lo = 0;
-    	pcb[j + 1].user_context.cp0_badvaddr = 0;
-    	pcb[j + 1].user_context.cp0_cause = 0;
-   		pcb[j + 1].user_context.cp0_epc = sched2_tasks[j]->entry_point;
-		pcb[j + 1].cursor_x = 0;
-		pcb[j + 1].cursor_y = 0;
-		queue_push(&ready_queue, &pcb[j + 1]);
-	}/*
-	for(j = num_sched1_tasks; j < num_lock_tasks + num_sched1_tasks; j++){
-
-		pcb[j + 1].pid = 2 + j;
-		pcb[j + 1].status = TASK_READY;
-		pcb[j + 1].cursor_x = 0;
-		pcb[j + 1].cursor_y = 0;
-		for(i = 1; i <= 31; i++){
-			pcb[j + 1].user_context.regs[i] = 0;
-		}
-		pcb[j + 1].user_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
-		pcb[j + 1].user_context.cp0_status = 0x8002;
-    	pcb[j + 1].user_context.hi = 0;
-    	pcb[j + 1].user_context.lo = 0;
-    	pcb[j + 1].user_context.cp0_badvaddr = 0;
-    	pcb[j + 1].user_context.cp0_cause = 0;
-   		pcb[j + 1].user_context.cp0_epc = lock_tasks[j - num_sched1_tasks]->entry_point;
-		queue_push(&ready_queue, &pcb[j + 1]);
-	}*/
+		pcb[j].user_context.regs[29] = 0xa0f00000 - j * 0x1000; //sp
+		pcb[j].user_context.cp0_status = 0x8002;
+    	pcb[j].user_context.hi = 0;
+    	pcb[j].user_context.lo = 0;
+    	pcb[j].user_context.cp0_badvaddr = 0;
+    	pcb[j].user_context.cp0_cause = 0;
+   		pcb[j].user_context.cp0_epc = final_test[j - 1]->entry_point;
+		pcb[j].cursor_x = 0;
+		pcb[j].cursor_y = 0;
+		pcb[j].sleep_due = -1;
+		queue_push(&ready_queue, &pcb[j]);
+	}
 }
 
 static void init_exception_handler()
@@ -172,6 +161,7 @@ void __attribute__((section(".entry_function"))) _start(void)
 
 	// init screen (QAQ)
 	init_screen();
+
 	printk("> [INIT] SCREEN initialization succeeded.\n");
 	// TODO Enable interrupt
 	OPEN_INTER();

@@ -34,6 +34,8 @@
 
 #define NUM_MAX_TASK 16
 
+#define INT_TIME 150000
+
 /* used to save register infomation */
 typedef struct regs_context
 {
@@ -94,6 +96,7 @@ typedef struct pcb
     int cursor_x;
     int cursor_y;
 
+    uint32_t sleep_due;
 } pcb_t;
 
 /* task information, used to init PCB */
@@ -108,6 +111,8 @@ extern queue_t ready_queue;
 
 /* block queue to wait */
 extern queue_t block_queue;
+
+extern queue_t sleep_queue;
 
 /* current running task PCB */
 extern pcb_t *current_running;

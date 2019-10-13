@@ -29,8 +29,9 @@ void do_mutex_lock_init(mutex_lock_t *lock)
 
 void do_mutex_lock_acquire(mutex_lock_t *lock)
 {
-    if(lock->status == LOCKED)
+    if(lock->status == LOCKED) {
         do_block();
+    }
     lock->status = LOCKED;
 }
 
