@@ -85,6 +85,7 @@ static void init_pcb()
 		pcb[j].cursor_x = 0;
 		pcb[j].cursor_y = 0;
 		pcb[j].sleep_due = -1;
+		pcb[j].status = TASK_READY;
 		queue_push(&ready_queue, &pcb[j]);
 	}
 }

@@ -45,8 +45,6 @@ void scheduler(void)
     if(current_running->status == TASK_RUNNING || current_running->status == TASK_READY) {
         current_running->status = TASK_READY;
         queue_push(&ready_queue, current_running);
-    } else if(current_running->status == TASK_BLOCKED) {
-        queue_push(&block_queue, current_running);
     }
     current_running = queue_dequeue(&ready_queue);
     current_running->status = TASK_RUNNING;
@@ -69,6 +67,7 @@ void do_block()
 {
     // block the current_running task into the queue
     current_running->status = TASK_BLOCKED;
+    queue_push(&block_queue, (void*)current_running);
     scheduler();
 }
 

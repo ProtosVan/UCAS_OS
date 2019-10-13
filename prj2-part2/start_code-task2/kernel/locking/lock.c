@@ -37,8 +37,10 @@ void do_mutex_lock_acquire(mutex_lock_t *lock)
 
 void do_mutex_lock_release(mutex_lock_t *lock)
 {
-    if(!queue_is_empty(&block_queue))
+    if(!queue_is_empty(&block_queue)) {
         do_unblock_one(&block_queue);
+        lock->status = LOCKED;
+    }
     else
         lock->status = UNLOCKED;
 }
