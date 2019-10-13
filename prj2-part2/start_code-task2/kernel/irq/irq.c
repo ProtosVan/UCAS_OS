@@ -7,7 +7,7 @@ static void irq_timer()
 {
     // TODO clock interrupt handler.
     // scheduler, time counter in here to do, emmmmmm maybe.
-    time_elapsed += INT_TIME;
+    time_elapsed += (INT_TIME + INT_TIME);
     screen_reflush();
     scheduler();
 }
