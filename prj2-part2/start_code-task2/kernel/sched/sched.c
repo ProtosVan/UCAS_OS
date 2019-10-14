@@ -46,8 +46,28 @@ void scheduler(void)
         current_running->status = TASK_READY;
         queue_push(&ready_queue, current_running);
     }
-    current_running = queue_dequeue(&ready_queue);
+
+    int maxpriority = -1;
+    int temptime = get_timer();
+    int tempprio;
+    int i =1;
+
+    for(; i<= 7;i++) {
+        if(pcb[i].status !=TASK_READY) continue;
+        tempprio = prio[i][0] + temptime - prio[i][1];
+        if(tempprio > maxpriority) {
+            maxpriority = tempprio;
+            current_running = &pcb[i];
+        }
+    }
+    prio[current_running->pid - 1][1]= temptime;
+
+    //current_running = &pcb[7];
+
+    //printk("test\n");
+    queue_remove(&ready_queue, current_running);
     current_running->status = TASK_RUNNING;
+
     screen_cursor_x = current_running->cursor_x;
     screen_cursor_y = current_running->cursor_y;
 }
@@ -63,19 +83,19 @@ void do_sleep(uint32_t sleep_time)
     // TODO sleep(seconds)
 }
 
-void do_block()
+void do_block(queue_t * queue)
 {
     // block the current_running task into the queue
     current_running->status = TASK_BLOCKED;
-    queue_push(&block_queue, (void*)current_running);
+    queue_push(queue, (void*)current_running);
     scheduler();
 }
 
-void do_unblock_one()
+void do_unblock_one(queue_t *queue)
 {
     // unblock the head task from the queue
     pcb_t *unblock_one;
-    unblock_one = queue_dequeue(&block_queue);
+    unblock_one = queue_dequeue(queue);
     unblock_one->status = TASK_READY;
     queue_push(&ready_queue, unblock_one);
 }

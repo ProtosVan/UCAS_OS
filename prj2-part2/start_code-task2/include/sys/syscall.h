@@ -67,7 +67,7 @@ void sys_write(char *);
 void sys_move_cursor(int, int);
 void sys_reflush();
 
-void mutex_lock_init(mutex_lock_t *);
+void mutex_lock_init(mutex_lock_t *, int);
 void mutex_lock_acquire(mutex_lock_t *);
 void mutex_lock_release(mutex_lock_t *);
 

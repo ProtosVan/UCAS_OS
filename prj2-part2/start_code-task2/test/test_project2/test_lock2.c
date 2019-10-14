@@ -12,11 +12,11 @@ spin_lock_t spin_lock;
 
 /* if you want to use mutex lock, you need define MUTEX_LOCK */
 #define MUTEX_LOCK
-mutex_lock_t mutex_lock;
+mutex_lock_t mutex_lock[2];
 
 void lock_task1(void)
 {
-        int print_location = 3;
+        int print_location = 5;
         while (1)
         {
                 int i;
@@ -28,7 +28,8 @@ void lock_task1(void)
 #endif
 
 #ifdef MUTEX_LOCK
-                        mutex_lock_init(&mutex_lock);
+                        mutex_lock_init(&mutex_lock[0], 0);
+                        mutex_lock_init(&mutex_lock[1], 1);
 #endif
                         is_init = TRUE;
                 }
@@ -44,7 +45,8 @@ void lock_task1(void)
 #endif
 
 #ifdef MUTEX_LOCK
-                mutex_lock_acquire(&mutex_lock);
+                mutex_lock_acquire(&mutex_lock[0]);
+                mutex_lock_acquire(&mutex_lock[1]);
 #endif
 
                 for (i = 0; i < 20; i++)
@@ -64,14 +66,15 @@ void lock_task1(void)
 #endif
 
 #ifdef MUTEX_LOCK
-                mutex_lock_release(&mutex_lock);
+                mutex_lock_release(&mutex_lock[0]);
+                mutex_lock_release(&mutex_lock[1]);
 #endif
         }
 }
 
 void lock_task2(void)
 {
-        int print_location = 4;
+        int print_location = 6;
         while (1)
         {
                 int i;
@@ -83,7 +86,8 @@ void lock_task2(void)
 #endif
 
 #ifdef MUTEX_LOCK
-                        mutex_lock_init(&mutex_lock);
+                        mutex_lock_init(&mutex_lock[1] ,1);
+                        mutex_lock_init(&mutex_lock[0], 0);
 #endif
                         is_init = TRUE;
                 }
@@ -99,7 +103,8 @@ void lock_task2(void)
 #endif
 
 #ifdef MUTEX_LOCK
-                mutex_lock_acquire(&mutex_lock);
+                mutex_lock_acquire(&mutex_lock[1]);
+                mutex_lock_acquire(&mutex_lock[0]);
 #endif
 
                 for (i = 0; i < 20; i++)
@@ -119,7 +124,8 @@ void lock_task2(void)
 #endif
 
 #ifdef MUTEX_LOCK
-                mutex_lock_release(&mutex_lock);
+                mutex_lock_release(&mutex_lock[1]);
+                mutex_lock_release(&mutex_lock[0]);
 #endif
         }
 }

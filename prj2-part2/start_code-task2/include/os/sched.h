@@ -110,7 +110,7 @@ typedef struct task_info
 extern queue_t ready_queue;
 
 /* block queue to wait */
-extern queue_t block_queue;
+extern queue_t block_queue[2];
 
 extern queue_t sleep_queue;
 
@@ -124,8 +124,10 @@ extern uint32_t initial_cp0_status;
 void do_scheduler(void);
 void do_sleep(uint32_t);
 
-void do_block();
-void do_unblock_one();
+void do_block(queue_t *);
+void do_unblock_one(queue_t *);
 void do_unblock_all(queue_t *);
+
+extern int prio[16][2];
 
 #endif

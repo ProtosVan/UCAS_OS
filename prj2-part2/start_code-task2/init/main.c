@@ -36,17 +36,20 @@
 queue_t ready_queue;
 
 /* block queue to wait */
-queue_t block_queue;
+queue_t block_queue[2];
 
 // sleep queue
 queue_t sleep_queue;
+
+int prio[16][2];
 
 int exception_handler[32];
 
 static void init_pcb()
 {
 	queue_init(&ready_queue);
-	queue_init(&block_queue);
+	queue_init(&block_queue[0]);
+	queue_init(&block_queue[1]);
 	queue_init(&sleep_queue);
 	int i;
 	int j;
@@ -86,6 +89,8 @@ static void init_pcb()
 		pcb[j].cursor_y = 0;
 		pcb[j].sleep_due = -1;
 		pcb[j].status = TASK_READY;
+		prio[j][0] = j;
+		prio[j][1] = 0;
 		queue_push(&ready_queue, &pcb[j]);
 	}
 }
@@ -126,7 +131,7 @@ static void init_syscall(void)
 	syscall[SYSCALL_SLEEP] = (int (*)())&(do_sleep);
 	
 	syscall[SYSCALL_BLOCK] = (void (*))&(do_block);
-	syscall[SYSCALL_UNBLOCK_ONE] = (void (*))&(do_unblock_one);
+	syscall[SYSCALL_UNBLOCK_ONE] = (int (*)())&(do_unblock_one);
 	syscall[SYSCALL_UNBLOCK_ALL] =(int (*)())&(do_unblock_all);
 	
 	syscall[SYSCALL_WRITE] = (int (*)())&(screen_write);

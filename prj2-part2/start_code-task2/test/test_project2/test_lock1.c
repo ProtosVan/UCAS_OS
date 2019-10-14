@@ -12,7 +12,7 @@ spin_lock_t spin_lock;
 
 /* if you want to use mutex lock, you need define MUTEX_LOCK */
 #define MUTEX_LOCK
-mutex_lock_t mutex_lock;
+mutex_lock_t mutex_lock[2];
 
 void lock_task1(void)
 {

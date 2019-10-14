@@ -51,9 +51,9 @@ void sys_move_cursor(int x, int y)
     invoke_syscall(SYSCALL_CURSOR, x, y, IGNORE);
 }
 
-void mutex_lock_init(mutex_lock_t *lock)
+void mutex_lock_init(mutex_lock_t *lock, int id)
 {
-    invoke_syscall(SYSCALL_MUTEX_LOCK_INIT, (int)lock, IGNORE, IGNORE);
+    invoke_syscall(SYSCALL_MUTEX_LOCK_INIT, (int)lock, (int)id, IGNORE);
 }
 
 void mutex_lock_acquire(mutex_lock_t *lock)
