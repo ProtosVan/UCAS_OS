@@ -52,7 +52,7 @@ void scheduler(void)
     int tempprio;
     int i =1;
 
-    for(; i<= 7;i++) {
+    for(; i<= 15;i++) {
         if(pcb[i].status !=TASK_READY) continue;
         tempprio = prio[i][0] + temptime - prio[i][1];
         if(tempprio > maxpriority) {
